@@ -117,11 +117,11 @@ module.exports = function(config) {
             _.each(components, function(component, index) {
                 if (component.columns && (component.columns.length > 0)) {
                     _.each(component.columns, function(column) {
-                        this.eachComponent(column.components, eachComp);
+                        this.eachComponent(eachComp, column.components);
                     }.bind(this));
                 }
                 else if (component.components && (component.components.length > 0)) {
-                    this.eachComponent(component.components, eachComp);
+                    this.eachComponent(eachComp, component.components);
                 }
                 else {
                     eachComp(component, index, components);
