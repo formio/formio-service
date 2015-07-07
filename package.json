@@ -11,6 +11,6 @@
   "dependencies": {
     "lodash": "^3.9.3",
     "q": "^1.4.1",
-    "request": "^2.58.0"
+    "superagent": "^1.2.0"
   }
 }

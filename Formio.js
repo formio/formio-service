@@ -1,4 +1,4 @@
-var request = require('request');
+var superagent = require('superagent');
 var _ = require('lodash');
 var Q = require('q');
 
@@ -28,21 +28,21 @@ module.exports = function(config) {
      * @returns {*|promise}
      * @private
      */
-    var _request = function(query) {
+    var _request = function(method, url, data, headers) {
         var deferred = Q.defer();
-        request(query, function(error, response, body) {
-            if (error) { return deferred.reject(error); }
-            if ((response.statusCode < 200) || (response.statusCode >= 300)) { return deferred.reject(body); }
-            try {
-                body = JSON.parse(body);
-            }
-            catch (e) {
-                return deferred.reject(e);
-            }
-            deferred.resolve({
-                response: response,
-                body: body
+        method = method || 'get';
+        var request = superagent[method](url).set('Accept', 'application/json');
+        if (headers) {
+            _.each(headers, function(value, key) {
+                request = request.set(key, value);
             });
+        }
+        if (data) {
+            request = request.send(data);
+        }
+        request.end(function(err, res) {
+            if (err) { return deferred.reject(err); }
+            deferred.resolve(res);
         });
         return deferred.promise;
     };
@@ -73,14 +73,29 @@ module.exports = function(config) {
         else {
 
             // Send the request.
-            return _request({
-                url: this.formUrl,
-                headers: {
-                    'x-jwt-token': token
-                }
-            }).then(function (result) {
-                this.form = result.body;
+            return _request('get', this.formUrl, null, {
+                'x-jwt-token': token
+            }).then(function (res) {
+                this.form = res.body;
             }.bind(this));
+        }
+    };
+
+    /**
+     * Save a form.
+     *
+     * @returns {*|promise}
+     */
+    Form.prototype.save = function() {
+        if (!this.form) {
+            var deferred = Q.defer();
+            deferred.reject('No form to save.');
+            return deferred.promise;
+        }
+        else {
+            return _request('put', this.formUrl, this.form, {
+                'x-jwt-token': token
+            });
         }
     };
 
@@ -99,7 +114,7 @@ module.exports = function(config) {
         }
         else {
             components = components ? components : this.form.components;
-            _.each(components, function(component) {
+            _.each(components, function(component, index) {
                 if (component.columns && (component.columns.length > 0)) {
                     _.each(component.columns, function(column) {
                         this.eachComponent(column.components, eachComp);
@@ -109,7 +124,7 @@ module.exports = function(config) {
                     this.eachComponent(component.components, eachComp);
                 }
                 else {
-                    eachComp(component);
+                    eachComp(component, index, components);
                 }
             }.bind(this));
         }
@@ -128,21 +143,18 @@ module.exports = function(config) {
         end = (this.numSubmissions && (end > this.numSubmissions)) ? (this.numSubmissions - 1) : end;
 
         // Return the promise.
-        return _request({
-            url: this.formUrl + '/submission?limit=' + config.pageSize,
-            headers: {
-                'x-jwt-token': token,
-                'Range-Unit': 'items',
-                'Range': this.currentSub + '-' + end
-            }
-        }).then(function(result) {
+        return _request('get', this.formUrl + '/submission?limit=' + config.pageSize, null, {
+            'x-jwt-token': token,
+            'Range-Unit': 'items',
+            'Range': this.currentSub + '-' + end
+        }).then(function(res) {
             if (!this.numSubmissions) {
-                var parts = result.response.headers['content-range'].split('/');
+                var parts = res.headers['content-range'].split('/');
                 this.numSubmissions = parseInt(parts[1], 10);
             }
 
             // Iterate through each submission.
-            _.each(result.body, function(submission) {
+            _.each(res.body, function(submission) {
 
                 // Call the submission...
                 eachSub(submission);
@@ -169,18 +181,13 @@ module.exports = function(config) {
          * @returns {*}
          */
         authenticate: function(email, password) {
-            return _request({
-                url: config.formio + '/app/api/user/login/submission',
-                method: 'POST',
-                form: {
-                    data: {
-                        'user.email': email,
-                        'user.password': password
-                    }
-
+            return _request('post', config.formio + '/app/api/user/login/submission', {
+                data: {
+                    'user.email': email,
+                    'user.password': password
                 }
-            }).then(function(result) {
-                token = result.response.headers['x-jwt-token'];
+            }).then(function(res) {
+                token = res.headers['x-jwt-token'];
             });
         },
 
