@@ -170,7 +170,7 @@ module.exports = function(config) {
          */
         authenticate: function(email, password) {
             return _request({
-                url: config.formio + '/app/api/user/login/submission',
+                url: config.formio + '/user/login/submission',
                 method: 'POST',
                 form: {
                     data: {
