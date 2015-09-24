@@ -15,6 +15,7 @@ module.exports = function(config) {
     config = config || {};
     config = _.defaults(config, {
         formio: 'https://formio.form.io',
+        api: 'https://api.form.io',
         pageSize: 20
     });
 
@@ -45,6 +46,42 @@ module.exports = function(config) {
             deferred.resolve(res);
         });
         return deferred.promise;
+    };
+
+    /**
+     * The Project class.
+     *
+     * @param projectUrl
+     * @constructor
+     */
+    var Project = function(projectUrl) {
+        this.project = null;
+        this.projectUrl = projectUrl;
+    };
+
+    /**
+     * Create a new project in Form.io
+     * @param template
+     *   The project template.
+     * @returns {*}
+     */
+    Project.prototype.create = function(template) {
+
+        // Create a project from a template.
+        var project = {
+            title: template.title,
+            description: template.description,
+            name: template.name,
+            template: _.omit(template, 'title', 'description', 'name'),
+            settings: {cors: '*'}
+        };
+
+        // Send the request.
+        return _request('post', config.api + '/project', project, {
+            'x-jwt-token': token
+        }).then(function (res) {
+            this.project = res.body;
+        }.bind(this));
     };
 
     /**
@@ -194,7 +231,12 @@ module.exports = function(config) {
         /**
          * Export the Form object.
          */
-        Form: Form
+        Form: Form,
+
+        /**
+         * Export the Project object.
+         */
+        Project: Project
     };
 
 };
