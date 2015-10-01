@@ -66,6 +66,10 @@ module.exports = function(config) {
      * @returns {*}
      */
     Project.prototype.create = function(template) {
+        template.settings = template.settings || {};
+        if (!template.settings.cors) {
+            template.settings.cors = '*';
+        }
 
         // Create a project from a template.
         var project = {
@@ -73,7 +77,7 @@ module.exports = function(config) {
             description: template.description,
             name: template.name,
             template: _.omit(template, 'title', 'description', 'name'),
-            settings: {cors: '*'}
+            settings: template.settings
         };
 
         // Send the request.
