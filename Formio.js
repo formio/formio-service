@@ -89,6 +89,18 @@ module.exports = function(config) {
     };
 
     /**
+     * Export a project
+     * @returns {*}
+     */
+    Project.prototype.export = function() {
+        return _request('get', this.projectUrl + '/export', {}, {
+            'x-jwt-token': token
+        }).then(function (res) {
+            this.template = res.body;
+        }.bind(this));
+    }
+
+    /**
      * The Form object.
      * @param form
      * @constructor
