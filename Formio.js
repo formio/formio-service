@@ -233,9 +233,8 @@ module.exports = function(config) {
          * @param password
          * @returns {*}
          */
-        authenticate: function(email, password, form) {
-            form = form || '/user/login';
-            return _request('post', config.formio + form + '/submission', {
+        authenticate: function(email, password) {
+            return _request('post', config.formio + '/user/login/submission', {
                 data: {
                     'user.email': email,
                     'user.password': password
