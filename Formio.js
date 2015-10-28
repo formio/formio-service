@@ -98,7 +98,7 @@ module.exports = function(config) {
         }).then(function (res) {
             this.template = res.body;
         }.bind(this));
-    }
+    };
 
     /**
      * The Form object.
