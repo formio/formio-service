@@ -1,0 +1,5 @@
+{
+  "server": "localhost:3000",
+  "user": "travis+demo@form.io",
+  "pass": "123testing"
+}
