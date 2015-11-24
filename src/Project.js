@@ -41,6 +41,17 @@ module.exports = function(config) {
     };
 
     /**
+     * Load a project.
+     */
+    Project.prototype.load = function() {
+        return util.request('get', this.url, null, {
+            'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
+        }).then(function (res) {
+            this.project = res.body;
+        }.bind(this));
+    };
+
+    /**
      * Read a project on Form.io
      * @returns {*}
      */
