@@ -261,6 +261,7 @@ module.exports = function(config) {
         }).then(function(result) {
             var form = new Form();
             form.form = result.body[0];
+            if (!form || !form.form) { throw new Error("Form not found"); }
             form.url = this.url + '/form/' + form.form._id.toString();
             return form;
         }.bind(this));
