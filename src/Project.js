@@ -136,14 +136,14 @@ module.exports = function(config) {
     /**
      * Bind to a project via websockets.
      *
-     * @param formName - The Form name to bind to.
+     * @param formPath - The Form path to bind to.
      * @param method - The HTTP Method to bind.
      * @param cb - Called when a message has been received.
      * @param sync - If this should be a synchronous bind.
      */
-    Project.prototype.bind = function(formName, method, cb, sync) {
+    Project.prototype.bind = function(formPath, method, cb, sync) {
         return this.connect().then(function() {
-            return this.form(formName).then(function(form) {
+            return this.form(formPath).then(function(form) {
                 var deferred = Q.defer();
                 method = method.toUpperCase();
                 sync = sync || false;
@@ -253,10 +253,10 @@ module.exports = function(config) {
     };
 
     /**
-     * Return a form within a project by name.
+     * Return a form within a project by path.
      */
-    Project.prototype.form = function(name) {
-        return util.request('get', this.url + '/form?name=' + name, null, {
+    Project.prototype.form = function(path) {
+        return util.request('get', this.url + '/form?path=' + path, null, {
             'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
         }).then(function(result) {
             var form = new Form();
