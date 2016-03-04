@@ -17,8 +17,8 @@ module.exports = function(config) {
         form = form || '/user/login';
         return util.request('post', config.formio + form + '/submission', {
             data: {
-                'user.email': this.email,
-                'user.password': this.pass
+                'email': this.email,
+                'password': this.pass
             }
         }).then(function (res) {
             this.token = res.headers['x-jwt-token'];
