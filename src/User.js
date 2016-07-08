@@ -1,10 +1,6 @@
 var util = require('./util');
 var User = null;
 module.exports = function (config) {
-  if (User) {
-    return User;
-  }
-
   User = function (email, pass) {
     this.token = '';
     this.email = email;
