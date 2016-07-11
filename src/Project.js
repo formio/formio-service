@@ -3,10 +3,6 @@ var Primus = require('primus');
 var Q = require('q');
 var Project = null;
 module.exports = function (config) {
-  if (Project) {
-    return Project;
-  }
-
   // Create the Form.
   var Form = require('./Form')(config);
 

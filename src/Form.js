@@ -2,10 +2,6 @@ var util = require('./util');
 var _ = require('lodash');
 var Form = null;
 module.exports = function (config) {
-  if (Form) {
-    return Form;
-  }
-
   var serialize = function(obj) {
     var str = [];
     for(var p in obj)
