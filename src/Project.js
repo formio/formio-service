@@ -20,6 +20,10 @@ module.exports = function (config) {
     this.connected = null;
   };
 
+  Project.setCurrentUser = function(user) {
+    Project.currentUser = user;
+    Form.setCurrentUser(user);
+  }
   Project.currentUser = null;
 
   /**

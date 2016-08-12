@@ -35,8 +35,8 @@ module.exports = function (config) {
      */
     authenticate: function (email, password, form) {
       this.currentUser = new User(email, password);
-      Form.currentUser = this.currentUser;
-      Project.currentUser = this.currentUser;
+      Form.setCurrentUser(this.currentUser);
+      Project.setCurrentUser(this.currentUser);
       return this.currentUser.authenticate(form);
     },
 

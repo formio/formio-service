@@ -23,6 +23,9 @@ module.exports = function (config) {
     this.numSubmissions = 0;
   };
 
+  Form.setCurrentUser = function(user) {
+    Form.currentUser = user;
+  }
   Form.currentUser = null;
 
   /**
