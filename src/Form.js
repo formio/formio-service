@@ -24,9 +24,8 @@ module.exports = function (config) {
   };
 
   Form.setCurrentUser = function(user) {
-    Form.currentUser = user;
-  }
-  Form.currentUser = null;
+    util.currentUser = user;
+  };
 
   /**
    * Override the toJson method to return the form.
@@ -50,9 +49,7 @@ module.exports = function (config) {
     else {
 
       // Send the request.
-      return util.request('get', this.url, null, {
-        'x-jwt-token': Form.currentUser ? Form.currentUser.token : ''
-      }).then(function (res) {
+      return util.request('get', this.url).then(function (res) {
         this.form = res.body;
         return this;
       }.bind(this));
@@ -71,9 +68,7 @@ module.exports = function (config) {
       return deferred.promise;
     }
     else {
-      return util.request('put', this.url, this.form, {
-        'x-jwt-token': Form.currentUser ? Form.currentUser.token : ''
-      });
+      return util.request('put', this.url, this.form);
     }
   };
 
@@ -85,9 +80,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Form.prototype.create = function (form) {
-    return util.request('post', this.url, form, {
-      'x-jwt-token': Form.currentUser ? Form.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('post', this.url, form).then(function (res) {
       this.form = res.body;
       this.url = this.url + '/form/' + this.form._id.toString();
       return this;
@@ -136,9 +129,7 @@ module.exports = function (config) {
     if (submission._id) {
       url += '/' + submission._id;
     }
-    return util.request(method, url, submission, {
-      'x-jwt-token': Form.currentUser ? Form.currentUser.token : ''
-    });
+    return util.request(method, url, submission);
   };
 
   /**
@@ -147,11 +138,10 @@ module.exports = function (config) {
   Form.prototype.loadSubmissions = function(query) {
     query = query || {};
     query.limit = config.pageSize;
-    return util.request('get', this.url + '/submission?' + serialize(query), null, {
-      'x-jwt-token': Form.currentUser ? Form.currentUser.token : ''
-    }).then(function (res) {
-      return res.body;
-    }.bind(this));
+    return util.request('get', this.url + '/submission?' + serialize(query))
+      .then(function (res) {
+        return res.body;
+      }.bind(this));
   };
 
   /**
@@ -168,7 +158,6 @@ module.exports = function (config) {
 
     // Return the promise.
     return util.request('get', this.url + '/submission?limit=' + config.pageSize, null, {
-      'x-jwt-token': Form.currentUser ? Form.currentUser.token : '',
       'Range-Unit': 'items',
       'Range': this.currentSub + '-' + end
     }).then(function (res) {
