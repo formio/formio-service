@@ -21,10 +21,8 @@ module.exports = function (config) {
   };
 
   Project.setCurrentUser = function(user) {
-    Project.currentUser = user;
-    Form.setCurrentUser(user);
-  }
-  Project.currentUser = null;
+    util.currentUser = user;
+  };
 
   /**
    * Override the toJson method to return the form.
@@ -42,9 +40,7 @@ module.exports = function (config) {
    */
   Project.prototype.create = function (project) {
     // Send the request.
-    return util.request('post', config.api + '/project', project, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('post', config.api + '/project', project).then(function (res) {
       this.project = res.body;
       this.url = config.api + '/project/' + this.project._id.toString();
       return this;
@@ -55,9 +51,7 @@ module.exports = function (config) {
    * Load a project.
    */
   Project.prototype.load = function () {
-    return util.request('get', this.url, null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('get', this.url).then(function (res) {
       this.project = res.body;
       return this;
     }.bind(this));
@@ -69,12 +63,11 @@ module.exports = function (config) {
    */
   Project.prototype.read = function (projectId) {
     // Send the request.
-    return util.request('get', config.api + '/project/' + projectId, null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
-      this.project = res.body;
-      return this;
-    }.bind(this));
+    return util.request('get', config.api + '/project/' + projectId)
+      .then(function (res) {
+        this.project = res.body;
+        return this;
+      }.bind(this));
   };
 
   /**
@@ -85,12 +78,11 @@ module.exports = function (config) {
    */
   Project.prototype.update = function (project) {
     // Send the request.
-    return util.request('put', config.api + '/project/' + project._id, project, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
-      this.project = res.body;
-      return this;
-    }.bind(this));
+    return util.request('put', config.api + '/project/' + project._id, project)
+      .then(function (res) {
+        this.project = res.body;
+        return this;
+      }.bind(this));
   };
 
   /**
@@ -99,9 +91,7 @@ module.exports = function (config) {
    */
   Project.prototype.delete = function () {
     // Send the request.
-    return util.request('del', this.url, null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('delete', this.url).then(function () {
       delete this.project;
     }.bind(this));
   };
@@ -126,14 +116,14 @@ module.exports = function (config) {
 
     this.connected = Q.defer();
     if (
-      !Project.currentUser || !Project.currentUser.token || !this.project || !this.project.name
+      !util.currentUser || !util.currentUser.token || !this.project || !this.project.name
     ) {
       this.connected.reject('User or Project not valid.');
       return this.connected.promise;
     }
     var Socket = Primus.createSocket();
     var socketUrl = config.api.replace(/^http[s]?/, 'ws');
-    this.socket = new Socket(socketUrl + '?token=' + Project.currentUser.token + '&project=' + this.project.name);
+    this.socket = new Socket(socketUrl + '?token=' + util.currentUser.token + '&project=' + this.project.name);
     this.socket.on('error', function (err) {
       this.socket.end();
       this.connected.reject(err);
@@ -235,9 +225,7 @@ module.exports = function (config) {
    */
   Project.prototype.list = function () {
     // Send the request.
-    return util.request('get', config.api + '/project', null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('get', config.api + '/project').then(function (res) {
       this.projects = res.body;
     }.bind(this));
   };
@@ -247,9 +235,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.export = function () {
-    return util.request('get', this.url + '/export', {}, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (res) {
+    return util.request('get', this.url + '/export').then(function (res) {
       this.template = res.body;
     }.bind(this));
   };
@@ -258,18 +244,14 @@ module.exports = function (config) {
    * List all of the forms within a Project.
    */
   Project.prototype.forms = function () {
-    return util.request('get', this.url + '/form', null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    });
+    return util.request('get', this.url + '/form');
   };
 
   /**
    * Return a form within a project by path.
    */
   Project.prototype.form = function (path) {
-    return util.request('get', this.url + '/form?path=' + path, null, {
-      'x-jwt-token': Project.currentUser ? Project.currentUser.token : ''
-    }).then(function (result) {
+    return util.request('get', this.url + '/form?path=' + path).then(function (result) {
       if (!result || !result.body || !result.body.length) {
         return null;
       }
