@@ -1,5 +1,6 @@
 var util = require('./util');
 var _ = require('lodash');
+var formioUtils = require('formio-utils');
 var Form = null;
 module.exports = function (config) {
   var serialize = function(obj) {
@@ -102,19 +103,7 @@ module.exports = function (config) {
     }
     else {
       components = components ? components : this.form.components;
-      _.each(components, function (component, index) {
-        if (component.columns && (component.columns.length > 0)) {
-          _.each(component.columns, function (column) {
-            this.eachComponent(eachComp, column.components);
-          }.bind(this));
-        }
-        else if (component.components && (component.components.length > 0)) {
-          this.eachComponent(eachComp, component.components);
-        }
-        else {
-          eachComp(component, index, components);
-        }
-      }.bind(this));
+      return formioUtils.eachComponent(components, eachComp);
     }
   };
 
