@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var util = require('util');
+var util = require('./src/util');
 
 /**
  * The Form.IO interface.
@@ -16,11 +16,11 @@ module.exports = function (config) {
     formio: 'https://formio.form.io',
     api: 'https://api.form.io',
     pageSize: 20,
-    apiKey: ''
+    key: ''
   });
 
-  if (config.apiKey) {
-    util.apiKey = config.apiKey;
+  if (config.key) {
+    util.apiKey = config.key;
   }
 
   // Get the classes.
