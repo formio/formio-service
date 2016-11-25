@@ -1,10 +1,6 @@
-var util = require('./util');
 var Primus = require('primus');
 var Q = require('q');
-var Project = null;
-module.exports = function (config) {
-  // Create the Form.
-  var Form = require('./Form')(config);
+module.exports = function (formio) {
 
   /**
    * The Project class.
@@ -12,16 +8,12 @@ module.exports = function (config) {
    * @param url
    * @constructor
    */
-  Project = function (url) {
+  var Project = function (url) {
     this.project = null;
     this.url = url;
     this.projects = [];
     this.socket = null;
     this.connected = null;
-  };
-
-  Project.setCurrentUser = function(user) {
-    util.currentUser = user;
   };
 
   /**
@@ -40,9 +32,9 @@ module.exports = function (config) {
    */
   Project.prototype.create = function (project) {
     // Send the request.
-    return util.request('post', config.api + '/project', project).then(function (res) {
+    return formio.request('post', formio.config.api + '/project', project).then(function (res) {
       this.project = res.body;
-      this.url = config.api + '/project/' + this.project._id.toString();
+      this.url = formio.config.api + '/project/' + this.project._id.toString();
       return this;
     }.bind(this));
   };
@@ -51,7 +43,7 @@ module.exports = function (config) {
    * Load a project.
    */
   Project.prototype.load = function () {
-    return util.request('get', this.url).then(function (res) {
+    return formio.request('get', this.url).then(function (res) {
       this.project = res.body;
       return this;
     }.bind(this));
@@ -62,8 +54,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.read = function (projectId) {
-    // Send the request.
-    return util.request('get', config.api + '/project/' + projectId)
+    return formio.request('get', formio.config.api + '/project/' + projectId)
       .then(function (res) {
         this.project = res.body;
         return this;
@@ -77,8 +68,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.update = function (project) {
-    // Send the request.
-    return util.request('put', config.api + '/project/' + project._id, project)
+    return formio.request('put', formio.config.api + '/project/' + project._id, project)
       .then(function (res) {
         this.project = res.body;
         return this;
@@ -90,8 +80,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.delete = function () {
-    // Send the request.
-    return util.request('delete', this.url).then(function () {
+    return formio.request('delete', this.url).then(function () {
       delete this.project;
     }.bind(this));
   };
@@ -116,14 +105,14 @@ module.exports = function (config) {
 
     this.connected = Q.defer();
     if (
-      !util.currentUser || !util.currentUser.token || !this.project || !this.project.name
+      !formio.currentUser || !formio.currentUser.token || !this.project || !this.project.name
     ) {
       this.connected.reject('User or Project not valid.');
       return this.connected.promise;
     }
     var Socket = Primus.createSocket();
-    var socketUrl = config.api.replace(/^http[s]?/, 'ws');
-    this.socket = new Socket(socketUrl + '?token=' + util.currentUser.token + '&project=' + this.project.name);
+    var socketUrl = formio.config.api.replace(/^http[s]?/, 'ws');
+    this.socket = new Socket(socketUrl + '?token=' + formio.currentUser.token + '&project=' + this.project.name);
     this.socket.on('error', function (err) {
       this.socket.end();
       this.connected.reject(err);
@@ -224,8 +213,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.list = function () {
-    // Send the request.
-    return util.request('get', config.api + '/project').then(function (res) {
+    return formio.request('get', formio.config.api + '/project').then(function (res) {
       this.projects = res.body;
     }.bind(this));
   };
@@ -235,7 +223,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Project.prototype.export = function () {
-    return util.request('get', this.url + '/export').then(function (res) {
+    return formio.request('get', this.url + '/export').then(function (res) {
       this.template = res.body;
     }.bind(this));
   };
@@ -244,19 +232,19 @@ module.exports = function (config) {
    * List all of the forms within a Project.
    */
   Project.prototype.forms = function () {
-    return util.request('get', this.url + '/form');
+    return formio.request('get', this.url + '/form');
   };
 
   /**
    * Return a form within a project by path.
    */
   Project.prototype.form = function (path) {
-    return util.request('get', this.url + '/form?path=' + path).then(function (result) {
+    return formio.request('get', this.url + '/form?path=' + path).then(function (result) {
       if (!result || !result.body || !result.body.length) {
         return null;
       }
 
-      var form = new Form();
+      var form = new formio.Form();
       form.form = result.body[0];
       form.url = this.url + '/form/' + form.form._id.toString();
       return form;
@@ -270,7 +258,7 @@ module.exports = function (config) {
    * @returns {form}
    */
   Project.prototype.createForm = function (form) {
-    var form = new Form(this.url + '/form');
+    var form = new formio.Form(this.url + '/form');
     return form.create(form);
   };
 

@@ -1,55 +1,102 @@
 var _ = require('lodash');
-var util = require('./src/util');
+var Q = require('q');
+var request = require('request');
+var User = require('./src/User');
+var Form = require('./src/Form');
+var Project = require('./src/Project');
 
 /**
- * The Form.IO interface.
- *
- * @param config - The configuration.
- *      - formio: The Form.IO application url.
- *      - pageSize: Change the page size when retrieving submissions.
+ * The main Formio object.
+ * @param _config
+ * @constructor
  */
-module.exports = function (config) {
-
-  // Establish some defaults.
-  config = config || {};
-  config = _.defaults(config, {
+var Formio = function(_config) {
+  _config = _config || {};
+  this.config = _.defaults(_config, {
     formio: 'https://formio.form.io',
     api: 'https://api.form.io',
     pageSize: 20,
     key: ''
   });
 
-  if (config.key) {
-    util.apiKey = config.key;
+  this.apiKey = this.config.key ? this.config.key : '';
+  this.currentUser = null;
+  this.User = User(this);
+  this.Form = Form(this);
+  this.Project = Project(this);
+};
+
+/**
+ * Authenticate a new user.
+ *
+ * @param email
+ * @param password
+ * @param form
+ * @returns {*}
+ */
+Formio.prototype.authenticate = function (email, password, form) {
+  this.currentUser = new this.User(email, password);
+  return this.currentUser.authenticate(form);
+}
+
+/**
+ * Perform a request against the Form.io server.
+ *
+ * @param method
+ * @param url
+ * @param data
+ * @param headers
+ * @returns {*|(()=>Promise<D>)|(()=>Promise<SendData>)}
+ */
+Formio.prototype.request = function (method, url, data, headers) {
+  var deferred = Q.defer();
+  method = method || 'get';
+  headers = _.defaults(headers || {}, {
+    'Accept': 'application/json'
+  });
+
+  if (
+    !headers.hasOwnProperty('x-jwt-token') &&
+    !headers.hasOwnProperty('x-token') &&
+    this.apiKey
+  ) {
+    headers['x-token'] = this.apiKey;
+  }
+  else if (
+    !headers.hasOwnProperty('x-jwt-token') &&
+    this.currentUser &&
+    this.currentUser.token
+  ) {
+    headers['x-jwt-token'] = this.currentUser.token;
   }
 
-  // Get the classes.
-  var User = require('./src/User')(config);
-  var Form = require('./src/Form')(config);
-  var Project = require('./src/Project')(config);
-
-  return {
-
-    /** The current user who is authenticated. */
-    currentUser: null,
-
-    /**
-     * Authenticate against Form.IO.
-     * @param email
-     * @param password
-     * @returns {*}
-     */
-    authenticate: function (email, password, form) {
-      this.currentUser = new User(email, password);
-      Form.setCurrentUser(this.currentUser);
-      Project.setCurrentUser(this.currentUser);
-      return this.currentUser.authenticate(form);
-    },
-
-    /** Expose the other classes. */
-    User: User,
-    Form: Form,
-    Project: Project
+  var options = {
+    method: method.toUpperCase(),
+    url: url,
+    headers: headers,
+    json: true
   };
 
+  if (data) {
+    options.body = data;
+  }
+
+  // Execute the request.
+  request(options, function(err, response) {
+    if (err) {
+      return deferred.reject(err);
+    }
+    deferred.resolve(response);
+  });
+  return deferred.promise;
+};
+
+/**
+ * The Form.IO interface.
+ *
+ * @param config - The configuration.
+ */
+module.exports = function (config) {
+  // Return a new instance of the Formio interface.
+  return new Formio(config);
 };

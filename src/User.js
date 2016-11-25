@@ -1,7 +1,5 @@
-var util = require('./util');
-var User = null;
-module.exports = function (config) {
-  User = function (email, pass) {
+module.exports = function (formio) {
+  var User = function (email, pass) {
     this.token = '';
     this.email = email;
     this.pass = pass;
@@ -13,7 +11,7 @@ module.exports = function (config) {
    */
   User.prototype.authenticate = function (form) {
     form = form || '/user/login';
-    return util.request('post', config.formio + form + '/submission', {
+    return formio.request('post', formio.config.formio + form + '/submission', {
       data: {
         'email': this.email,
         'password': this.pass

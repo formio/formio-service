@@ -1,8 +1,6 @@
-var util = require('./util');
 var _ = require('lodash');
 var formioUtils = require('formio-utils');
-var Form = null;
-module.exports = function (config) {
+module.exports = function (formio) {
   var serialize = function(obj) {
     var str = [];
     for(var p in obj)
@@ -17,15 +15,11 @@ module.exports = function (config) {
    * @param form
    * @constructor
    */
-  Form = function (url) {
+  var Form = function (url) {
     this.form = null;
     this.url = url;
     this.currentSub = 0;
     this.numSubmissions = 0;
-  };
-
-  Form.setCurrentUser = function(user) {
-    util.currentUser = user;
   };
 
   /**
@@ -48,9 +42,7 @@ module.exports = function (config) {
       return deferred.promise;
     }
     else {
-
-      // Send the request.
-      return util.request('get', this.url).then(function (res) {
+      return formio.request('get', this.url).then(function (res) {
         this.form = res.body;
         return this;
       }.bind(this));
@@ -69,7 +61,7 @@ module.exports = function (config) {
       return deferred.promise;
     }
     else {
-      return util.request('put', this.url, this.form);
+      return formio.request('put', this.url, this.form);
     }
   };
 
@@ -81,7 +73,7 @@ module.exports = function (config) {
    * @returns {*}
    */
   Form.prototype.create = function (form) {
-    return util.request('post', this.url, form).then(function (res) {
+    return formio.request('post', this.url, form).then(function (res) {
       this.form = res.body;
       this.url = this.url + '/form/' + this.form._id.toString();
       return this;
@@ -118,7 +110,7 @@ module.exports = function (config) {
     if (submission._id) {
       url += '/' + submission._id;
     }
-    return util.request(method, url, submission);
+    return formio.request(method, url, submission);
   };
 
   /**
@@ -126,8 +118,8 @@ module.exports = function (config) {
    */
   Form.prototype.loadSubmissions = function(query) {
     query = query || {};
-    query.limit = config.pageSize;
-    return util.request('get', this.url + '/submission?' + serialize(query))
+    query.limit = formio.config.pageSize;
+    return formio.request('get', this.url + '/submission?' + serialize(query))
       .then(function (res) {
         return res.body;
       }.bind(this));
@@ -142,11 +134,9 @@ module.exports = function (config) {
   Form.prototype.eachSubmission = function (eachSub) {
 
     // Determine the end submission.
-    var end = this.currentSub + (config.pageSize - 1);
+    var end = this.currentSub + (formio.config.pageSize - 1);
     end = (this.numSubmissions && (end > this.numSubmissions)) ? (this.numSubmissions - 1) : end;
-
-    // Return the promise.
-    return util.request('get', this.url + '/submission?limit=' + config.pageSize, null, {
+    return formio.request('get', this.url + '/submission?limit=' + formio.config.pageSize, null, {
       'Range-Unit': 'items',
       'Range': this.currentSub + '-' + end
     }).then(function (res) {
@@ -163,7 +153,7 @@ module.exports = function (config) {
       });
 
       // Increase the current submission.
-      this.currentSub += config.pageSize;
+      this.currentSub += formio.config.pageSize;
 
       // If the current submisison is greater than the number of submissions, then we are done.
       if (this.currentSub < this.numSubmissions) {
