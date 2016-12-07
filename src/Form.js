@@ -74,6 +74,9 @@ module.exports = function (formio) {
    */
   Form.prototype.create = function (form) {
     return formio.request('post', this.url, form).then(function (res) {
+      if (res.statusCode >= 300) {
+        throw res.statusMessage;
+      }
       this.form = res.body;
       this.url = this.url + '/form/' + this.form._id.toString();
       return this;

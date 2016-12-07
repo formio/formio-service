@@ -258,8 +258,8 @@ module.exports = function (formio) {
    * @returns {form}
    */
   Project.prototype.createForm = function (form) {
-    var form = new formio.Form(this.url + '/form');
-    return form.create(form);
+    var formService = new formio.Form(this.url + '/form');
+    return formService.create(form);
   };
 
   return Project;
