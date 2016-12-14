@@ -9,6 +9,7 @@ module.exports = function (formio) {
    * @constructor
    */
   var Project = function (url) {
+    this.formio = formio;
     this.project = null;
     this.url = url;
     this.projects = [];
@@ -33,8 +34,10 @@ module.exports = function (formio) {
   Project.prototype.create = function (project) {
     // Send the request.
     return formio.request('post', formio.config.api + '/project', project).then(function (res) {
-      this.project = res.body;
-      this.url = formio.config.api + '/project/' + this.project._id.toString();
+      if (res.body && res.body._id) {
+        this.project = res.body;
+        this.url = formio.config.api + '/project/' + this.project._id.toString();
+      }
       return this;
     }.bind(this));
   };

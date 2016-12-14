@@ -37,7 +37,18 @@ var Formio = function(_config) {
 Formio.prototype.authenticate = function (email, password, form) {
   this.currentUser = new this.User(email, password);
   return this.currentUser.authenticate(form);
-}
+};
+
+// Create an alias for login.
+Formio.prototype.login = Formio.prototype.authenticate;
+
+/**
+ * Register a new user
+ */
+Formio.prototype.register = function(user, form) {
+  this.currentUser = new this.User();
+  return this.currentUser.register(user, form);
+};
 
 /**
  * Perform a request against the Form.io server.
@@ -82,12 +93,17 @@ Formio.prototype.request = function (method, url, data, headers) {
   }
 
   // Execute the request.
-  request(options, function(err, response) {
-    if (err) {
-      return deferred.reject(err);
-    }
-    deferred.resolve(response);
-  });
+  try {
+    request(options, function(err, response) {
+      if (err) {
+        return deferred.reject(err);
+      }
+      deferred.resolve(response);
+    });
+  }
+  catch(err) {
+    deferred.reject(err);
+  }
   return deferred.promise;
 };
 
