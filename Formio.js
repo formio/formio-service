@@ -98,6 +98,12 @@ Formio.prototype.request = function (method, url, data, headers) {
       if (err) {
         return deferred.reject(err);
       }
+      // Fail for anything other than 200 status code.
+      if (parseInt(response.statusCode / 100, 10) !== 2) {
+        var err = new Error(response.body);
+        err.response = response;
+        return deferred.reject(err);
+      }
       deferred.resolve(response);
     });
   }

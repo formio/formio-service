@@ -129,6 +129,13 @@ module.exports = function (formio) {
   };
 
   /**
+   * Retrieve all form actions.
+   */
+  Form.prototype.actions = function() {
+    return formio.request('get', this.url + '/action')
+  };
+
+  /**
    * Iterate over each submission.
    *
    * @param eachSub
