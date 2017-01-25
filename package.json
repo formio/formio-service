@@ -9,11 +9,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "formio-utils": "^0.1.9",
-    "lodash": "^4.16.2",
+    "formio-utils": "^0.1.10",
+    "lodash": "^4.17.4",
     "primus": "^4.0.5",
     "q": "^1.4.1",
-    "request": "^2.75.0",
+    "request": "^2.79.0",
     "ws": "^0.8.1"
   },
   "devDependencies": {
