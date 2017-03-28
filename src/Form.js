@@ -127,16 +127,16 @@ module.exports = function (formio) {
         return res.body;
       }.bind(this));
   };
-  
+
   /**
-   * Get a particular submission by its ID.
+   * Load a particular submission by its ID.
    */
-  Form.prototype.getSubmission = function(submissionId) {
+  Form.prototype.loadSubmission = function(submissionId) {
     return formio.request('get', this.url + '/submission/' + submissionId)
       .then(function (res) {
         return res.body;
       }.bind(this));
-  };  
+  };
 
   /**
    * Retrieve all form actions.
