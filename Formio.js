@@ -51,6 +51,14 @@ Formio.prototype.register = function(user, form) {
 };
 
 /**
+ * Sets the user token
+ */
+Formio.prototype.setToken = function(token) {
+  this.currentUser = new this.User();
+  this.currentUser.token = token;
+};
+
+/**
  * Perform a request against the Form.io server.
  *
  * @param method

@@ -1,5 +1,6 @@
 var Primus = require('primus');
 var Q = require('q');
+var _ = require('lodash');
 module.exports = function (formio) {
 
   /**
@@ -39,6 +40,60 @@ module.exports = function (formio) {
         this.url = formio.config.api + '/project/' + this.project._id.toString();
       }
       return this;
+    }.bind(this));
+  };
+
+  /**
+   * Return the current user for this project.
+   *
+   * @return {*}
+   */
+  Project.prototype.currentUser = function() {
+    if (this.formio.currentUser && this.formio.currentUser.user) {
+      return Promise.resolve(this.formio.currentUser.user);
+    }
+
+    if (!this.formio.currentUser || !this.formio.currentUser.token) {
+      return Promise.reject('No user token was provided');
+    }
+
+    return formio.request('get', this.url + '/current').then(function (res) {
+      this.formio.currentUser.user = res.body;
+      return this.formio.currentUser.user;
+    }.bind(this));
+  };
+
+  /**
+   * Determine if the current user has access to do certain things in this project.
+   * @param permission
+   */
+  Project.prototype.hasAccess = function(permission) {
+    if (!this.project) {
+      return false;
+    }
+
+    // Get the current user.
+    return this.currentUser().then(function(user) {
+
+      // Project owners have access.
+      if (this.project.owner === user._id) {
+        return true;
+      }
+
+      // Iterate through all the access of this project.
+      var hasAccess = false;
+      _.each(this.project.access, function(access) {
+        if (permission === access.type) {
+          var intersection = _.filter(_.intersection(access.roles, user.roles));
+          if (intersection && intersection.length) {
+            hasAccess = true;
+          }
+          return false;
+        }
+      }.bind(this));
+
+      // Return if the have access.
+      return hasAccess;
     }.bind(this));
   };
 
