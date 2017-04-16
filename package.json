@@ -11,7 +11,7 @@
   "dependencies": {
     "formio-utils": "^0.1.10",
     "lodash": "^4.17.4",
-    "primus": "^4.0.5",
+    "primus": "^5.2.2",
     "q": "^1.4.1",
     "request": "^2.79.0",
     "ws": "^0.8.1"
