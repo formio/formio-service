@@ -14,6 +14,7 @@ module.exports = function (formio) {
     this.project = null;
     this.url = url;
     this.projects = [];
+    this.teams = [];
     this.socket = null;
     this.connected = null;
   };
@@ -64,37 +65,83 @@ module.exports = function (formio) {
   };
 
   /**
+   * Get the teams assigned to this project.
+   */
+  Project.prototype.getTeams = function() {
+    if (this.teams) {
+      return Promise.resolve(this.teams);
+    }
+    return formio.request('get', formio.config.api + '/team/project/' + this.project._id)
+      .then(function (res) {
+        this.teams = res.body;
+        return this.teams;
+      }.bind(this));
+  };
+
+  /**
    * Determine if the current user has access to do certain things in this project.
    * @param permission
    */
-  Project.prototype.hasAccess = function(permission) {
+  Project.prototype.hasAccess = function(permissions) {
     if (!this.project) {
       return false;
     }
 
+    // make sure it is an array of permissions.
+    permissions = (permissions instanceof Array) ? permissions : [permissions];
+
     // Get the current user.
-    return this.currentUser().then(function(user) {
+    return this.currentUser()
+      .then(function(user) {
 
-      // Project owners have access.
-      if (this.project.owner === user._id) {
-        return true;
-      }
+        // Project owners have access.
+        if (this.project.owner === user._id) {
+          return true;
+        }
 
-      // Iterate through all the access of this project.
-      var hasAccess = false;
-      _.each(this.project.access, function(access) {
-        if (permission === access.type) {
-          var intersection = _.filter(_.intersection(access.roles, user.roles));
-          if (intersection && intersection.length) {
-            hasAccess = true;
+        // Iterate through all the access of this project.
+        var hasAccess = false;
+        _.each(this.project.access, function(access) {
+          if (permissions.indexOf(access.type) !== -1) {
+            var intersection = _.filter(_.intersection(access.roles, user.roles));
+            if (intersection && intersection.length) {
+              hasAccess = true;
+            }
+            return false;
           }
+        }.bind(this));
+
+        // Return if the have access.
+        return hasAccess;
+      }.bind(this))
+
+      // check for team access.
+      .then(function(hasAccess) {
+        if (hasAccess) {
+          return hasAccess;
+        }
+
+        // Check teams.
+        var team_perms = _.intersection(permissions, ['team_admin', 'team_read', 'team_write']);
+        if (!team_perms.length) {
           return false;
         }
-      }.bind(this));
 
-      // Return if the have access.
-      return hasAccess;
-    }.bind(this));
+        // Fetch the teams.
+        return this.getTeams().then(function(teams) {
+          _.each(teams, function(team) {
+            if (
+              (team_perms.indexOf(team.permission) !== -1) &&
+              (_.find(team.data.members, {_id: this.formio.currentUser.user._id}))
+            ) {
+              hasAccess = true;
+              return false;
+            }
+          }.bind(this));
+          return hasAccess;
+        }.bind(this));
+      }.bind(this)
+    );
   };
 
   /**
@@ -162,15 +209,25 @@ module.exports = function (formio) {
     }
 
     this.connected = Q.defer();
+    var hasKey = formio.apiKey || (formio.currentUser && formio.currentUser.token);
     if (
-      !formio.currentUser || !formio.currentUser.token || !this.project || !this.project.name
+      !hasKey ||
+      !this.project ||
+      !this.project.name
     ) {
       this.connected.reject('User or Project not valid.');
       return this.connected.promise;
     }
     var Socket = Primus.createSocket();
     var socketUrl = formio.config.api.replace(/^http[s]?/, 'ws');
-    this.socket = new Socket(socketUrl + '?token=' + formio.currentUser.token + '&project=' + this.project.name);
+    if (formio.apiKey) {
+      socketUrl += '?token=' + formio.apiKey;
+    }
+    else if (formio.currentUser && formio.currentUser.token) {
+      socketUrl += '?token=' + formio.currentUser.token;
+    }
+    socketUrl += '&project=' + this.project.name;
+    this.socket = new Socket(socketUrl);
     this.socket.on('error', function (err) {
       this.socket.end();
       this.connected.reject(err);
