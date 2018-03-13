@@ -21,3 +21,24 @@ formio.authenticate('test@example.com', 'password').then(function() {
     });
 });
 ```
+
+Using an API key
+=================
+You can also use a Form.io API key to access the API's without needing to login.
+
+```
+var formio = require('formio-service')({
+  key: '[YOUR_API_KEY]'
+});
+var Form = formio.Form;
+
+// Create a new form instance.
+var form = new Form('https://myapp.form.io/user');
+
+// Iterate through all the submissions.
+form.eachSubmission(function(submission) {
+
+  // Console log the submissions.
+  console.log(submission);
+});
+```
