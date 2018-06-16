@@ -1,6 +1,6 @@
 {
   "name": "formio-service",
-  "version": "1.3.5",
+  "version": "1.4.0",
   "description": "",
   "main": "Formio.js",
   "scripts": {
@@ -9,14 +9,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "formio-utils": "^0.1.10",
+    "formiojs": "^2.32.2",
     "lodash": "^4.17.4",
-    "primus": "^5.2.2",
+    "primus": "^7.2.2",
     "q": "^1.4.1",
     "request": "^2.79.0",
-    "ws": "^0.8.1"
+    "ws": "^5.2.0"
   },
   "devDependencies": {
-    "mocha": "^3.1.0"
+    "mocha": "^5.2.0"
   }
 }

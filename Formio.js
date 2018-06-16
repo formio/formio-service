@@ -92,6 +92,7 @@ Formio.prototype.request = function (method, url, data, headers) {
   var options = {
     method: method.toUpperCase(),
     url: url,
+    rejectUnauthorized: false,
     headers: headers,
     json: true
   };

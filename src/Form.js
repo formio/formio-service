@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var formioUtils = require('formio-utils');
+var FormioUtils = require('formiojs/utils');
 module.exports = function (formio) {
   var serialize = function(obj) {
     var str = [];
@@ -98,7 +98,7 @@ module.exports = function (formio) {
     }
     else {
       components = components ? components : this.form.components;
-      return formioUtils.eachComponent(components, eachComp);
+      return FormioUtils.eachComponent(components, eachComp);
     }
   };
 
