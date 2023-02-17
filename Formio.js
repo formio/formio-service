@@ -20,6 +20,7 @@ var Formio = function(_config) {
   });
 
   this.apiKey = this.config.key ? this.config.key : '';
+  this.adminKey = this.config.adminKey || '';
   this.currentUser = null;
   this.User = User(this);
   this.Form = Form(this);
@@ -87,6 +88,13 @@ Formio.prototype.request = function (method, url, data, headers) {
     this.currentUser.token
   ) {
     headers['x-jwt-token'] = this.currentUser.token;
+  }
+  else if (
+    !headers.hasOwnProperty('x-jwt-token') &&
+    !headers.hasOwnProperty('x-token') &&
+    this.adminKey
+  ) {
+    headers['x-admin-key'] = this.adminKey;
   }
 
   var options = {
